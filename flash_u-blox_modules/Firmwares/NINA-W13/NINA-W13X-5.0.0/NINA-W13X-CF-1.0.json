@@ -1,0 +1,13 @@
+[
+  {
+    "Label": "ConnectivitySoftware",
+    "Description": "NINA-W13X  u-blox connectivity software",
+    "File": "NINA-W13X-SW-5.0.0-022.bin",
+    "Version": "NINA-W13X-SW-5.0.0-022",
+    "Address": "0x20000",
+    "Size": "0xDAC90",
+    "Id": "0x0",
+    "Permissions": "rwx",
+    "SignatureFile": "NINA-W13X-SI-5.0.0-022.txt"
+  }
+]

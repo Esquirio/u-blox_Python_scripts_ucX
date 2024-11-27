@@ -1,0 +1,13 @@
+[
+  {
+    "Label": "ConnectivitySoftware",
+    "Description": "NINA-B22X u-blox connectivity software",
+    "File": "NINA-B22X-SW-6.0.1-001.bin",
+    "Version": "NINA-B22X-SW-6.0.1-001",
+    "Address": "0x20000",
+    "Size": "0xBCAA0",
+    "Id": "0x0",
+    "Permissions": "rwx",
+    "SignatureFile": "NINA-B22X-SI-6.0.1-001.txt"
+  }
+]
