@@ -28,11 +28,24 @@ def read_config(config_file):
     return config
 
 def load_JSON(config):
-    json_path = config.get("PATH")
+    # Get the directory of the current script
+    script_dir = os.path.dirname(__file__)
 
-    if not json_path:
+    # Construct the relative path from the config
+    relative_path = os.path.join("Firmwares", config.get("MODULE"),
+        config.get("MODULE") + "-" + config.get("FW_VERSION"),
+        config.get("JSON_FILE")
+    )
+    
+    if not relative_path:
         print(f"{Fore.RED}Error: PATH is required in the configuration file.")
         return
+    
+    # Construct the full path in a platform-independent way
+    json_path = os.path.join(script_dir, *relative_path.split('/'))
+
+    # Debug print to verify the path
+    print(f"{Fore.GREEN}Loading JSON file from path: {json_path}")
 
     # Load JSON file
     try:
