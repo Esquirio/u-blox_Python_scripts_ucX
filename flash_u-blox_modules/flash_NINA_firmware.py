@@ -62,7 +62,7 @@ def load_JSON(config):
         "fw": config.get("FW_VERSION"),  # Get the firmware version from the config file
         "port": config.get("COMPORT"),  # Get the COM port from the config file
         "baudrate": int(config.get("BAUDRATE")),  #Get the baudrate from the config file
-        "id_value": int(data["Id"], 16),  # Convert from hex to decimal
+        "id": int(data["Id"], 16),  # Convert from hex to decimal
         "size": int(data["Size"], 16),    # Convert from hex to decimal
         "file": data["File"],  # Get "File" from JSON data
         "signature_file": data["SignatureFile"], # Get the signature file name from JSON data
@@ -74,15 +74,15 @@ def load_JSON(config):
 
     # Read the signature from the signature file (Local function)
     def read_signature(parameters):
-            # Ensure the signature file exists in the same folder as the JSON
-            signature_path = os.path.join(os.path.dirname(parameters["json_path"]), parameters["signature_file"])
-            if not os.path.exists(signature_path):
-                print(f"{Fore.RED}Error: Signature file not found at {signature_path}")
-                return
+        # Ensure the signature file exists in the same folder as the JSON
+        signature_path = os.path.join(os.path.dirname(parameters["json_path"]), parameters["signature_file"])
+        if not os.path.exists(signature_path):
+            print(f"{Fore.RED}Error: Signature file not found at {signature_path}")
+            return
 
-            # Load the signature from TXT file
-            with open(signature_path, "r") as file:
-                parameters["signature"] = file.read().strip()
+        # Load the signature from TXT file
+        with open(signature_path, "r") as file:
+            parameters["signature"] = file.read().strip()
 
     read_signature(parameters)
 
@@ -94,21 +94,14 @@ def main(config_file):
     if not config:
         return
 
-    # Extract parameters from config file
-    com_port = config.get("COMPORT")
-    uart_baud_rate = int(config.get("BAUDRATE", 115200))
-    if not com_port:
-        print(f"{Fore.RED}Error: COMPORT is required in the configuration file.")
-        return
-
     parameters = load_JSON(config)
 
-    read_signature(parameters)
-
-    # Construct AT command with flags instead of 0
-    at_command = (f'AT+UFWUPD={parameters["mode"]},{parameters["baud_rate"]},'
-                  f'{parameters["id_value"]},{parameters["size"]},'
+    # Construct AT command with flags
+    at_command = (f'AT+UFWUPD={parameters["mode"]},{parameters["baudrate"]},'
+                  f'{parameters["id"]},{parameters["size"]},'
                   f'{parameters["signature"]},{parameters["name"]},{parameters["flags"]}')
+    print(f"{Fore.GREEN}*** AT Command to flash {parameters["module"]}-{parameters["fw"]} ***")
+    print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
 
 
     print(f"{Fore.GREEN}*** AT Command: ***")
@@ -116,8 +109,8 @@ def main(config_file):
 
     # Open the serial port
     try:
-        with serial.Serial(com_port, uart_baud_rate, timeout=2) as ser:
-            print(f"{Fore.GREEN}*** Openning UART - COMPORT: {com_port}, baudrate: {uart_baud_rate} ***")
+        with serial.Serial(parameters["port"], parameters["baudrate"], timeout=2) as ser:
+            print(f"{Fore.GREEN}*** Openning UART - COMPORT: {parameters["port"]}, baudrate: {parameters["baudrate"]} ***")
             
             # Reset the input and output buffers
             ser.reset_input_buffer()
