@@ -58,28 +58,33 @@ def load_JSON(config):
     # Extract parameters from JSON
     parameters = {
         "mode": 0,
-        "baud_rate": 115200,  # Flashing baudrate
+        "module": config.get("MODULE"),  # Get the module name from the config file
+        "fw": config.get("FW_VERSION"),  # Get the firmware version from the config file
+        "port": config.get("COMPORT"),  # Get the COM port from the config file
+        "baudrate": int(config.get("BAUDRATE")),  #Get the baudrate from the config file
         "id_value": int(data["Id"], 16),  # Convert from hex to decimal
         "size": int(data["Size"], 16),    # Convert from hex to decimal
-        "file": data["File"],  # Extract "File" from JSON data
-        "signature_file": data["SignatureFile"],
-        "name": data["Version"],
+        "file": data["File"],  # Get "File" from JSON data
+        "signature_file": data["SignatureFile"], # Get the signature file name from JSON data
+        "name": data["Version"], # Get the complete firmware version name from JSON data
         "flags": data["Permissions"],  # Get the flags from the Permissions key
         "json_path": json_path,  # Get the flags from the Permissions key
-        "signature": None  # Will be filled later
+        "signature": None  # None, it will be filled later
     }
-    return parameters
 
-def read_signature(parameters):
-    # Ensure the signature file exists in the same folder as the JSON
-    signature_path = os.path.join(os.path.dirname(parameters["json_path"]), parameters["signature_file"])
-    if not os.path.exists(signature_path):
-        print(f"{Fore.RED}Error: Signature file not found at {signature_path}")
-        return
+    # Read the signature from the signature file (Local function)
+    def read_signature(parameters):
+            # Ensure the signature file exists in the same folder as the JSON
+            signature_path = os.path.join(os.path.dirname(parameters["json_path"]), parameters["signature_file"])
+            if not os.path.exists(signature_path):
+                print(f"{Fore.RED}Error: Signature file not found at {signature_path}")
+                return
 
-    # Load the signature from TXT file
-    with open(signature_path, "r") as file:
-        parameters["signature"] = file.read().strip()
+            # Load the signature from TXT file
+            with open(signature_path, "r") as file:
+                parameters["signature"] = file.read().strip()
+
+    read_signature(parameters)
 
     return parameters
 
