@@ -40,10 +40,12 @@ def load_JSON(config):
     module = config.get("MODULE")
     if module in nina_family:
 
+        json_file = f"{module}-CF-1.0.json"
+
         # Construct the relative path from the config
         relative_path = os.path.join("Firmwares", config.get("MODULE"),
             config.get("MODULE") + "-" + config.get("FW_VERSION"),
-            config.get("JSON_FILE")
+            json_file
         )
         
         if not relative_path:
