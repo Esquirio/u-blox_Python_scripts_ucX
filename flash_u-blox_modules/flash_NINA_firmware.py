@@ -10,6 +10,11 @@ from colorama import Fore, Back, Style, init
 # Initialize colorama
 init(autoreset=True)
 
+# Variables
+u_blox_module_names = ["NINA-B22X", "NINA-W13X", "NINA-W15X", "NORA-W36X"]
+nina_family = [name for name in u_blox_module_names if name.startswith("NINA")]
+nora_family = [name for name in u_blox_module_names if name.startswith("NORA")]
+
 def read_config(config_file):
     config = {}
     try:
@@ -31,62 +36,72 @@ def load_JSON(config):
     # Get the directory of the current script
     script_dir = os.path.dirname(__file__)
 
-    # Construct the relative path from the config
-    relative_path = os.path.join("Firmwares", config.get("MODULE"),
-        config.get("MODULE") + "-" + config.get("FW_VERSION"),
-        config.get("JSON_FILE")
-    )
-    
-    if not relative_path:
-        print(f"{Fore.RED}Error: PATH is required in the configuration file.")
-        return
-    
-    # Construct the full path in a platform-independent way
-    json_path = os.path.join(script_dir, *relative_path.split('/'))
+    # Set the default JSON_FILE based on the MODULE value
+    module = config.get("MODULE")
+    if module in nina_family:
 
-    # Debug print to verify the path
-    print(f"{Fore.GREEN}Loading JSON file from path: {json_path}")
+        # Construct the relative path from the config
+        relative_path = os.path.join("Firmwares", config.get("MODULE"),
+            config.get("MODULE") + "-" + config.get("FW_VERSION"),
+            config.get("JSON_FILE")
+        )
+        
+        if not relative_path:
+            print(f"{Fore.RED}Error: PATH is required in the configuration file.")
+            return
+        
+        # Construct the full path in a platform-independent way
+        json_path = os.path.join(script_dir, *relative_path.split('/'))
 
-    # Load JSON file
-    try:
-        with open(json_path, "r") as file:
-            data = json.load(file)[0]
-    except FileNotFoundError:
-        print(f"{Fore.RED}Error: JSON file not found at {json_path}")
-        return
+        # Debug print to verify the path
+        print(f"{Fore.GREEN}Loading JSON file from path: {json_path}")
 
-    # Extract parameters from JSON
-    parameters = {
-        "mode": 0,
-        "module": config.get("MODULE"),  # Get the module name from the config file
-        "fw": config.get("FW_VERSION"),  # Get the firmware version from the config file
-        "port": config.get("COMPORT"),  # Get the COM port from the config file
-        "baudrate": int(config.get("BAUDRATE")),  #Get the baudrate from the config file
-        "id": int(data["Id"], 16),  # Convert from hex to decimal
-        "size": int(data["Size"], 16),    # Convert from hex to decimal
-        "file": data["File"],  # Get "File" from JSON data
-        "signature_file": data["SignatureFile"], # Get the signature file name from JSON data
-        "name": data["Version"], # Get the complete firmware version name from JSON data
-        "flags": data["Permissions"],  # Get the flags from the Permissions key
-        "json_path": json_path,  # Get the flags from the Permissions key
-        "signature": None  # None, it will be filled later
-    }
-
-    # Read the signature from the signature file (Local function)
-    def read_signature(parameters):
-        # Ensure the signature file exists in the same folder as the JSON
-        signature_path = os.path.join(os.path.dirname(parameters["json_path"]), parameters["signature_file"])
-        if not os.path.exists(signature_path):
-            print(f"{Fore.RED}Error: Signature file not found at {signature_path}")
+        # Load JSON file
+        try:
+            with open(json_path, "r") as file:
+                data = json.load(file)[0]
+        except FileNotFoundError:
+            print(f"{Fore.RED}Error: JSON file not found at {json_path}")
             return
 
-        # Load the signature from TXT file
-        with open(signature_path, "r") as file:
-            parameters["signature"] = file.read().strip()
+        # Extract parameters from JSON
+        parameters = {
+            "mode": 0,
+            "module": config.get("MODULE"),  # Get the module name from the config file
+            "fw": config.get("FW_VERSION"),  # Get the firmware version from the config file
+            "port": config.get("COMPORT"),  # Get the COM port from the config file
+            "baudrate": int(config.get("BAUDRATE")),  #Get the baudrate from the config file
+            "id": int(data["Id"], 16),  # Convert from hex to decimal
+            "size": int(data["Size"], 16),    # Convert from hex to decimal
+            "file": data["File"],  # Get "File" from JSON data
+            "signature_file": data["SignatureFile"], # Get the signature file name from JSON data
+            "name": data["Version"], # Get the complete firmware version name from JSON data
+            "flags": data["Permissions"],  # Get the flags from the Permissions key
+            "json_path": json_path,  # Get the flags from the Permissions key
+            "signature": None  # None, it will be filled later
+        }
 
-    read_signature(parameters)
+        # Read the signature from the signature file (Local function)
+        def read_signature(parameters):
+            # Ensure the signature file exists in the same folder as the JSON
+            signature_path = os.path.join(os.path.dirname(parameters["json_path"]), parameters["signature_file"])
+            if not os.path.exists(signature_path):
+                print(f"{Fore.RED}Error: Signature file not found at {signature_path}")
+                return
 
-    return parameters
+            # Load the signature from TXT file
+            with open(signature_path, "r") as file:
+                parameters["signature"] = file.read().strip()
+
+        read_signature(parameters)
+
+        return parameters
+    elif module in nora_family:
+        print(f"{Fore.RED}TODO: {module}")  
+        return None
+    else:
+        print(f"{Fore.RED}Error: Unsupported module {module}")
+        return None
 
 def main(config_file):
     # Read configuration
