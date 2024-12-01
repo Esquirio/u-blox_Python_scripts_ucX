@@ -15,9 +15,9 @@ u_blox_module_names = ["NINA-B22X", "NINA-W13X", "NINA-W15X", "NORA-W36X"]
 nina_family = [name for name in u_blox_module_names if name.startswith("NINA")]
 nora_family = [name for name in u_blox_module_names if name.startswith("NORA")]
 flash_baud_rate = 921600
-time_sleep = 1
+time_sleep = 0.5
 
-def read_config(config_file):
+def read_config(config_file: str) -> dict:
     config = {}
     try:
         with open(config_file, "r") as file:
@@ -34,7 +34,7 @@ def read_config(config_file):
         return None
     return config
 
-def load_JSON(config):
+def load_JSON(config: dict) -> dict:
     # Get the directory of the current script
     script_dir = os.path.dirname(__file__)
 
@@ -107,7 +107,7 @@ def load_JSON(config):
         print(f"{Fore.RED}Error: Unsupported module {module}")
         return None
 
-def flash_nina_fw(parameters, ser):
+def flash_nina_fw(parameters: dict, ser: serial.Serial):
     if not parameters["port"]:
         print(f"{Fore.RED}Error: COMPORT is required in the configuration file.")
         return
@@ -145,7 +145,7 @@ def flash_nina_fw(parameters, ser):
     file_path = os.path.join(os.path.dirname(parameters["json_path"]), parameters["file"])
     if not os.path.exists(file_path):
         print(f"{Fore.RED}Error: File {file_path} not found for transfer.")
-        return
+        return None
 
     # Get the size of the file to transfer
     file_size = os.path.getsize(file_path)
@@ -189,37 +189,7 @@ def flash_nina_fw(parameters, ser):
     print(f"{Fore.CYAN}\nTotal time taken for transfer: {elapsed_time:.2f} seconds")
     print(f"{Fore.CYAN}Transfer speed: {file_size / elapsed_time / 1024:.2f} KB/s\n")
 
-def update_flash_baudrate(parameters, ser:serial.Serial):
-    # Updating the serial baudrate
-    print(f"{Fore.CYAN}### Changing the baud rate to {parameters["baudrate"]}... ###\n")
-    
-    # AT command to change the serial baudrate
-    at_command = f"AT+UMRS={parameters["baudrate"]},1,8,1,1,0"
-
-    # Send the AT command
-    print(f"{Fore.GREEN}*** Sending the AT Command to flash {parameters["module"]}-{parameters["fw"]} ***")
-    print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
-    ser.write(at_command.encode() + b"\r\n")
-
-    # Salve and reboot the module
-    ser.write(b"AT&W\r\n")
-    ser.write(b"AT+CPWROFF\r\n")
-
-    time.sleep(time_sleep)
-
-    # Update the baudrate of the serial port
-    ser.baudrate = parameters["baudrate"]
-    print(f"{Fore.GREEN}*** Baudrate changed to {parameters["baudrate"]} ***\n")
-
-    # Wait for the +STARTUP message
-    r = ser.read()	  
-    #Read response until STARTUP received
-    while (str.find(r.decode(),"+STARTUP") < 0):
-        r = r + ser.read()
-    print(f"{Fore.YELLOW}{Style.DIM}+STARTUP received")
-    
-
-def main(config_file):
+def main(config_file: str):
     # Read configuration
     config = read_config(config_file)
     if not config:
@@ -240,25 +210,16 @@ def main(config_file):
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
 
-                    # # Check if the baudrate is different from the flash_baud_rate
-                    if(parameters["baudrate"] != flash_baud_rate):
-                        # Updating the serial baudrate
-                        parameters["baudrate"] = flash_baud_rate
-                        update_flash_baudrate(parameters, ser)
-                        
                     # Flash the firmware
                     flash_nina_fw(parameters, ser)
 
-                    time.sleep(time_sleep)
-
                     # Wait for the +STARTUP message
-                    while (ser.in_waiting < 0):
-                        r = ser.read()
-                        print(r.decode())			  
-                        # #Read response until STARTUP received
-                        # while (str.find(r.decode(),"+STARTUP") < 0):
-                        #     r = r + ser.read()
-                        # print(f"{Fore.YELLOW}{Style.DIM}+STARTUP received")
+                    r = ser.read()
+                    print(r)			  
+                    #Read response until STARTUP received
+                    while (str.find(r.decode(),"+STARTUP") < 0):
+                        r = r + ser.read()
+                    print(f"{Fore.YELLOW}{Style.DIM}+STARTUP received")
 
                     at_command = "ATI9"
                     ser.write(at_command.encode() + b"\r\n")
