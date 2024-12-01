@@ -105,122 +105,144 @@ def load_JSON(config):
         print(f"{Fore.RED}Error: Unsupported module {module}")
         return None
 
+def flash_nina_fw(parameters, config, ser):
+    # Extract parameters from config file
+    u_blox_module = config.get("MODULE")
+    fw_version = config.get("FW_VERSION")
+    com_port = config.get("COMPORT")
+
+    if not com_port:
+        print(f"{Fore.RED}Error: COMPORT is required in the configuration file.")
+        return
+    
+    # Construct AT command with flags
+    at_command = (f'AT+UFWUPD={parameters["mode"]},{parameters["baudrate"]},'
+                  f'{parameters["id"]},{parameters["size"]},'
+                  f'{parameters["signature"]},{parameters["name"]},{parameters["flags"]}')
+    print(f"{Fore.GREEN}*** AT Command to flash {u_blox_module}X-{fw_version} ***")
+    print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
+
+    # Send the AT command
+    print(f"{Fore.CYAN}{Style.DIM}### Sending the AT command... ###")
+    ser.write(at_command.encode() + b"\r\n")
+
+    # Record the start time
+    start_time = time.time()
+
+    # Now, wait for the sequence of 3 'C' characters
+    c_count = 0
+    while c_count < 3:
+        byte = ser.read()
+        # Flush the input buffer
+        ser.reset_input_buffer()
+
+        if byte == b'C':
+            c_count += 1
+            print(f"{Back.WHITE}{Fore.BLACK}{byte.decode('utf-8')}", end="")
+        elif byte:
+            c_count = 0  # Reset if something else is received
+
+    print(f"{Fore.GREEN}\n\n*** Starting XMODEM file transfer... ***")
+
+    # Prepare XMODEM file transfer
+    file_path = os.path.join(os.path.dirname(parameters["json_path"]), parameters["file"])
+    if not os.path.exists(file_path):
+        print(f"{Fore.RED}Error: File {file_path} not found for transfer.")
+        return
+
+    # Get the size of the file to transfer
+    file_size = os.path.getsize(file_path)
+
+    # Initialize the progress bar
+    progress_bar = tqdm(total=file_size, unit='B', unit_scale=True, desc="Transferring File", ncols=80)
+
+    def progress_callback(total_packets, success_count, error_count):
+        """ Progress callback to update the progress bar """
+        packet_size = 128  # or 1024 for XMODEM-1K
+        bytes_transferred = success_count * packet_size
+        progress_bar.update(bytes_transferred - progress_bar.n)
+
+    # Start the XMODEM transfer
+    with open(file_path, "rb") as f:
+        def getc(size, timeout=1):
+            """ XMODEM getc callback function to receive data from UART """
+            byte = ser.read(1)  # Read 1 byte from the UART connection
+            if byte:
+                return byte
+            return None
+
+        def putc(data, timeout=1):
+            """ XMODEM putc callback function to send data to UART """
+            ser.write(data)  # Write data to the UART connection
+            return len(data)
+
+        modem = XMODEM(getc, putc)  # Using both getc and putc functions
+        # Set the progress callback
+        modem.send(f, callback=progress_callback)
+        
+        # Calculate elapsed time
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+
+        progress_bar.close()
+        print(f"{Fore.GREEN}*** File transfer completed. ***")
+
+
+    # Print elapsed time and transfer details
+    print(f"{Fore.CYAN}\nTotal time taken for transfer: {elapsed_time:.2f} seconds")
+    print(f"{Fore.CYAN}Transfer speed: {file_size / elapsed_time / 1024:.2f} KB/s\n")
+
 def main(config_file):
     # Read configuration
     config = read_config(config_file)
     if not config:
         return
 
+    # Load JSON file and extract parameters
     parameters = load_JSON(config)
 
-    # Construct AT command with flags
-    at_command = (f'AT+UFWUPD={parameters["mode"]},{parameters["baudrate"]},'
-                  f'{parameters["id"]},{parameters["size"]},'
-                  f'{parameters["signature"]},{parameters["name"]},{parameters["flags"]}')
-    print(f"{Fore.GREEN}*** AT Command to flash {parameters["module"]}-{parameters["fw"]} ***")
-    print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
+
+    if parameters["module"] in u_blox_module_names:
+        if parameters["module"] in nina_family:
+            # Open the serial port
+            try:
+                with serial.Serial(parameters["port"], parameters["baudrate"], timeout=2) as ser:
+                    print(f"{Fore.GREEN}*** Openning UART - COMPORT: {parameters["port"]}, baudrate: {parameters["baudrate"]} ***")
+                    
+                    # Reset the input and output buffers
+                    ser.reset_input_buffer()
+                    ser.reset_output_buffer()
+
+                    flash_nina_fw(parameters, config, ser)
 
 
-    print(f"{Fore.GREEN}*** AT Command: ***")
-    print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
+                    # Wait for the +STARTUP message
+                    r = ser.read()				  
+                    #Read response until STARTUP received
+                    while (str.find(r.decode(),"+STARTUP") < 0):
+                        r = r + ser.read()
+                    print(f"{Fore.YELLOW}{Style.DIM}+STARTUP received")
 
-    # Open the serial port
-    try:
-        with serial.Serial(parameters["port"], parameters["baudrate"], timeout=2) as ser:
-            print(f"{Fore.GREEN}*** Openning UART - COMPORT: {parameters["port"]}, baudrate: {parameters["baudrate"]} ***")
-            
-            # Reset the input and output buffers
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
+                    at_command = "ATI9"
+                    ser.write(at_command.encode() + b"\r\n")
+                    resp = ser.read(55).decode()
+                    resp = resp[resp.find('"'):resp.rfind('"') + 1]
+                    print(f"{Fore.GREEN}*** Firmware Version: {resp} ***")	
+                    print(f"{Fore.GREEN}*** Closing the serial port! ***\n")
+                    ser.close()
 
-            # Send the AT command
-            print(f"{Fore.CYAN}{Style.DIM}### Sending the AT command... ###")
-            ser.write(at_command.encode() + b"\r\n")
+            except serial.SerialException as e:
+                print(f"{Fore.RED}Error: {e}")
 
-            # time.sleep(1)  # Give some time for the command to be processed
+        elif parameters["module"] in nora_family:
+            print(f"{Fore.RED}TODO: {parameters["module"]}")
+            return None
+    else:
+        print(f"{Fore.RED}Error: Unsupported module {parameters["module"]}")
+        return None
 
-            # Record the start time
-            start_time = time.time()
-
-            # Now, wait for the sequence of 3 'C' characters
-            c_count = 0
-            while c_count < 3:
-                byte = ser.read()
-                # Flush the input buffer
-                ser.reset_input_buffer()
-
-                if byte == b'C':
-                    c_count += 1
-                    print(f"{Back.WHITE}{Fore.BLACK}{byte.decode('utf-8')}", end="")
-                elif byte:
-                    c_count = 0  # Reset if something else is received
-
-            print(f"{Fore.GREEN}\n\n*** Starting XMODEM file transfer... ***")
-
-            # Prepare XMODEM file transfer
-            file_path = os.path.join(os.path.dirname(parameters["json_path"]), parameters["file"])
-            if not os.path.exists(file_path):
-                print(f"{Fore.RED}Error: File {file_path} not found for transfer.")
-                return
-
-            # Get the size of the file to transfer
-            file_size = os.path.getsize(file_path)
-
-            # Initialize the progress bar
-            progress_bar = tqdm(total=file_size, unit='B', unit_scale=True, desc="Transferring File", ncols=80)
-
-            def progress_callback(total_packets, success_count, error_count):
-                """ Progress callback to update the progress bar """
-                packet_size = 128  # or 1024 for XMODEM-1K
-                bytes_transferred = success_count * packet_size
-                progress_bar.update(bytes_transferred - progress_bar.n)
-            
-            with open(file_path, "rb") as f:
-                def getc(size, timeout=1):
-                    """ XMODEM getc callback function to receive data from UART """
-                    byte = ser.read(1)  # Read 1 byte from the UART connection
-                    if byte:
-                        return byte
-                    return None
-
-                def putc(data, timeout=1):
-                    """ XMODEM putc callback function to send data to UART """
-                    ser.write(data)  # Write data to the UART connection
-                    return len(data)
-
-                modem = XMODEM(getc, putc)  # Using both getc and putc functions
-                # Set the progress callback
-                modem.send(f, callback=progress_callback)
-                
-                # Calculate elapsed time
-                end_time = time.time()
-                elapsed_time = end_time - start_time
-
-                progress_bar.close()
-                print(f"{Fore.GREEN}*** File transfer completed. ***")
-
-            # Print elapsed time and transfer details
-            print(f"{Fore.CYAN}\nTotal time taken for transfer: {elapsed_time:.2f} seconds")
-            print(f"{Fore.CYAN}Transfer speed: {file_size / elapsed_time / 1024:.2f} KB/s\n")
-
-            # Wait for the +STARTUP message
-            r = ser.read()				  
-		    #Read response until STARTUP received
-            while (str.find(r.decode(),"+STARTUP") < 0):
-                r = r + ser.read()
-            print(f"{Fore.YELLOW}{Style.DIM}+STARTUP received")
-
-            at_command = "ATI9"
-            ser.write(at_command.encode() + b"\r\n")
-            resp = ser.read(55).decode()
-            resp = resp[resp.find('"'):resp.rfind('"') + 1]
-            print(f"{Fore.GREEN}*** Firmware Version: {resp} ***")	
-
-            print(f"{Fore.GREEN}*** Closing the serial port! ***\n")
-            ser.close()
-
-    except serial.SerialException as e:
-        print(f"{Fore.RED}Error: {e}")
+    # except serial.SerialException as e:
+    #     print(f"{Fore.RED}Error: {e}")
 
 if __name__ == "__main__":
     # Parse command-line argument for the config file
