@@ -10,10 +10,11 @@ from colorama import Fore, Back, Style, init
 # Initialize colorama
 init(autoreset=True)
 
-# Variables
+# Global Variables
 u_blox_module_names = ["NINA-B22X", "NINA-W13X", "NINA-W15X", "NORA-W36X"]
 nina_family = [name for name in u_blox_module_names if name.startswith("NINA")]
 nora_family = [name for name in u_blox_module_names if name.startswith("NORA")]
+flash_baud_rate = 921600
 
 def read_config(config_file):
     config = {}
@@ -56,7 +57,7 @@ def load_JSON(config):
         json_path = os.path.join(script_dir, *relative_path.split('/'))
 
         # Debug print to verify the path
-        print(f"{Fore.GREEN}Loading JSON file from path: {json_path}")
+        # print(f"{Fore.GREEN}Loading JSON file from path: {json_path}")
 
         # Load JSON file
         try:
@@ -105,13 +106,8 @@ def load_JSON(config):
         print(f"{Fore.RED}Error: Unsupported module {module}")
         return None
 
-def flash_nina_fw(parameters, config, ser):
-    # Extract parameters from config file
-    u_blox_module = config.get("MODULE")
-    fw_version = config.get("FW_VERSION")
-    com_port = config.get("COMPORT")
-
-    if not com_port:
+def flash_nina_fw(parameters, ser):
+    if not parameters["port"]:
         print(f"{Fore.RED}Error: COMPORT is required in the configuration file.")
         return
     
@@ -119,17 +115,17 @@ def flash_nina_fw(parameters, config, ser):
     at_command = (f'AT+UFWUPD={parameters["mode"]},{parameters["baudrate"]},'
                   f'{parameters["id"]},{parameters["size"]},'
                   f'{parameters["signature"]},{parameters["name"]},{parameters["flags"]}')
-    print(f"{Fore.GREEN}*** AT Command to flash {u_blox_module}X-{fw_version} ***")
-    print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
 
     # Send the AT command
-    print(f"{Fore.CYAN}{Style.DIM}### Sending the AT command... ###")
+    print(f"{Fore.GREEN}*** Sending the AT Command to flash {parameters["module"]}X-{parameters["fw"]} ***")
+    print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
     ser.write(at_command.encode() + b"\r\n")
 
     # Record the start time
     start_time = time.time()
 
     # Now, wait for the sequence of 3 'C' characters
+    print(f"{Fore.GREEN}*** Ready to send fw via XMODEM... ***")
     c_count = 0
     while c_count < 3:
         byte = ser.read()
@@ -192,6 +188,34 @@ def flash_nina_fw(parameters, config, ser):
     print(f"{Fore.CYAN}\nTotal time taken for transfer: {elapsed_time:.2f} seconds")
     print(f"{Fore.CYAN}Transfer speed: {file_size / elapsed_time / 1024:.2f} KB/s\n")
 
+# def update_flash_baudrate(parameters, ser):
+#     # Updating the serial baudrate
+#     print(f"{Fore.CYAN}### Changing the baud rate to {parameters["baudrate"]}... ###")
+    
+#     at_command = f"AT+UMRS={parameters["baudrate"]},1,8,1,1,0"
+
+#     # Send the AT command
+#     print(f"{Fore.GREEN}*** Sending the AT Command to flash {u_blox_module}X-{fw_version} ***")
+#     print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
+#     ser.write(at_command.encode() + b"\r\n")
+#     [full_resp, r] = spa.command(f"AT+UMRS={flash_baud_rate},1,8,1,1,0")
+#     print(f"{Fore.YELLOW}{Style.DIM}full_resp = {full_resp}  r = {r}")
+#     ser.write(f"AT&W\r\n".encode())
+#     [full_resp, r] = spa.command("AT&W")
+#     print(f"{Fore.YELLOW}{Style.DIM}full_resp = {full_resp}  r = {r}")
+#     [full_resp, r] = spa.command("AT+CPWROFF")
+#     print(f"{Fore.YELLOW}{Style.DIM}full_resp = {full_resp}  r = {r}")
+#     time.sleep(1)
+#     parameters["baudrate"] = flash_baud_rate
+#     ser.baudrate = parameters["baudrate"]
+#     print(f"{Fore.GREEN}*** Baud rate changed to {parameters["baudrate"]} ***")
+#     r = spa.waitForStartup()
+#     print(f"{Fore.YELLOW}{Style.DIM}r = {r}")
+#     ser.reset_input_buffer()
+#     ser.reset_output_buffer()
+#     [full_resp, r] = spa.command("ATI9")
+#     print(f"{Fore.YELLOW}{Style.DIM}full_resp = {full_resp}  r = {r}")
+
 def main(config_file):
     # Read configuration
     config = read_config(config_file)
@@ -207,13 +231,21 @@ def main(config_file):
             # Open the serial port
             try:
                 with serial.Serial(parameters["port"], parameters["baudrate"], timeout=2) as ser:
-                    print(f"{Fore.GREEN}*** Openning UART - COMPORT: {parameters["port"]}, baudrate: {parameters["baudrate"]} ***")
+                    print(f"{Fore.GREEN}*** Openning UART - COMPORT: {parameters["port"]}, baudrate: {parameters["baudrate"]} ***\n")
                     
                     # Reset the input and output buffers
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
 
-                    flash_nina_fw(parameters, config, ser)
+                    # # Check if the baudrate is different from the flash_baud_rate
+                    # if(parameters["baudrate"] != flash_baud_rate):
+                    #     # Updating the serial baudrate
+                    #     parameters["baudrate"] = flash_baud_rate
+                    #     update_flash_baudrate(parameters, ser)
+                        
+
+
+                    flash_nina_fw(parameters, ser)
 
 
                     # Wait for the +STARTUP message
