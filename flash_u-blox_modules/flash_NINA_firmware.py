@@ -6,6 +6,7 @@ import time
 from tqdm import tqdm
 from xmodem import XMODEM
 from colorama import Fore, Back, Style, init
+from ubxsa import UBXSerialAdapter
 
 # Initialize colorama
 init(autoreset=True)
@@ -107,7 +108,7 @@ def load_JSON(config: dict) -> dict:
         print(f"{Fore.RED}Error: Unsupported module {module}")
         return None
 
-def flash_nina_fw(parameters: dict, ser: serial.Serial):
+def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Serial):
     if not parameters["port"]:
         print(f"{Fore.RED}Error: COMPORT is required in the configuration file.")
         return
@@ -120,7 +121,8 @@ def flash_nina_fw(parameters: dict, ser: serial.Serial):
     # Send the AT command
     print(f"{Fore.GREEN}*** Sending the AT Command to flash {parameters["module"]}X-{parameters["fw"]} ***")
     print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
-    ser.write(at_command.encode() + b"\r\n")
+    ubx_port.send_command(at_command)
+    # ser.write(at_command.encode() + b"\r\n")
 
     # Record the start time
     start_time = time.time()
@@ -129,7 +131,7 @@ def flash_nina_fw(parameters: dict, ser: serial.Serial):
     print(f"{Fore.GREEN}*** Ready to send fw via XMODEM... ***")
     c_count = 0
     while c_count < 3:
-        byte = ser.read()
+        byte = ubx_port.read()
         # Flush the input buffer
         ser.reset_input_buffer()
 
@@ -163,14 +165,14 @@ def flash_nina_fw(parameters: dict, ser: serial.Serial):
     with open(file_path, "rb") as f:
         def getc(size, timeout=1):
             """ XMODEM getc callback function to receive data from UART """
-            byte = ser.read(1)  # Read 1 byte from the UART connection
+            byte = ubx_port.read(1)  # Read 1 byte from the UART connection
             if byte:
                 return byte
             return None
 
         def putc(data, timeout=1):
             """ XMODEM putc callback function to send data to UART """
-            ser.write(data)  # Write data to the UART connection
+            ubx_port.write(data)  # Write data to the UART connection
             return len(data)
 
         modem = XMODEM(getc, putc)  # Using both getc and putc functions
@@ -206,31 +208,46 @@ def main(config_file: str):
                 with serial.Serial(parameters["port"], parameters["baudrate"], timeout=2) as ser:
                     print(f"{Fore.GREEN}*** Openning UART - COMPORT: {parameters["port"]}, baudrate: {parameters["baudrate"]} ***\n")
                     
-                    # Reset the input and output buffers
+                    # Reset input and output buffers
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
 
+                    ser.readline()
+                    ser.readline()
+                    
+                    # Create a UBXSerialAdapter object
+                    ubx_port = UBXSerialAdapter(ser)
+
+                    # Check the firmware version before flashing
+                    ubx_port.send_command("ATI9")
+                    full_resp = ubx_port.wait_for_response("OK")
+
+                    resp = full_resp[full_resp.find('"'):full_resp.rfind('"') + 1]
+                    print(f"{Fore.GREEN}*** Before flashing: ***\nFW Version: {resp}")	
+
                     # Flash the firmware
-                    flash_nina_fw(parameters, ser)
+                    # flash_nina_fw(parameters, ubx_port, ser)
+
+                    ubx_port.send_command("AT+CPWROFF")
+                    ubx_port.wait_for_response("OK")
 
                     # Wait for the +STARTUP message
-                    r = ser.read()
-                    print(r)			  
-                    #Read response until STARTUP received
-                    while (str.find(r.decode(),"+STARTUP") < 0):
-                        r = r + ser.read()
-                    print(f"{Fore.YELLOW}{Style.DIM}+STARTUP received")
+                    resp = ubx_port.wait_for_startup()              
+                    print(f"{Fore.YELLOW}{Style.DIM}{resp} received")
+                    
+                    # Check the firmware version after flashing
+                    ubx_port.send_command("ATI9")
+                    full_resp = ubx_port.wait_for_response("OK")
+                    resp = full_resp[full_resp.find('"'):full_resp.rfind('"') + 1]
+                    print(f"{Fore.GREEN}*** After flashing: ***\nFW Version: {resp}")
 
-                    at_command = "ATI9"
-                    ser.write(at_command.encode() + b"\r\n")
-                    resp = ser.read(55).decode()
-                    resp = resp[resp.find('"'):resp.rfind('"') + 1]
-                    print(f"{Fore.GREEN}*** Firmware Version: {resp} ***")	
-                    print(f"{Fore.GREEN}*** Closing the serial port! ***\n")
+                    # Close the serial port
                     ser.close()
+                    ser. __del__()
 
             except serial.SerialException as e:
                 print(f"{Fore.RED}Error: {e}")
+
 
         elif parameters["module"] in nora_family:
             print(f"{Fore.RED}TODO: {parameters["module"]}")
