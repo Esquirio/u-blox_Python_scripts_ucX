@@ -226,7 +226,7 @@ def main(config_file: str):
                     print(f"{Fore.GREEN}*** Before flashing: ***\nFW Version: {resp}")	
 
                     # Flash the firmware
-                    # flash_nina_fw(parameters, ubx_port, ser)
+                    flash_nina_fw(parameters, ubx_port, ser)
 
                     ubx_port.send_command("AT+CPWROFF")
                     ubx_port.wait_for_response("OK")
