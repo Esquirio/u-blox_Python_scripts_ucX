@@ -6,7 +6,7 @@ images_list = ["image_33kb.jpg", "image_53kb.jpg", "image_100kb.jpg", "image_500
                "image_1mb.jpg", "image_5mb.jpg", "image_10mb.jpg", "image_20mb.jpg",
                "image_105mb.jpg"]
 
-def fetch_image(image_url, save_path):
+def fetch_image(image_url, save_path, result_file):
     start_time = time.time()
     response = requests.get(image_url)
     end_time = time.time()
@@ -20,10 +20,9 @@ def fetch_image(image_url, save_path):
         transfer_time = (end_time - start_time) * 1000  # in milliseconds
         image_size = len(response.content)  # in bytes
         image_size_kb = image_size / 1024  # in kilobytes
-        throughput = (image_size * 8) / (end_time - start_time) / (1024 * 1024)  # in Mbps
+        throughput = (image_size) / (end_time - start_time) / (1024 * 1024)  # in Mbps
         
         formatted_start_time = datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')
-        formatted_filename = datetime.fromtimestamp(start_time).strftime('%Y.%m.%d.%H.%M.%S_results.txt')
         
         result = (
             f'***************************************************\n'
@@ -37,13 +36,18 @@ def fetch_image(image_url, save_path):
         
         print(result)
         
-        with open(formatted_filename, 'w') as file:
+        with open(result_file, 'a') as file:
             file.write(result)
     else:
         print(f'Failed to fetch image. Status code: {response.status_code}')
 
 if __name__ == "__main__":
-    for image_name in images_list:
-        image_url = f'http://localhost:8000/{image_name}'  # URL of the image on the server
-        save_path = "sample_received.jpg"  # Path to save the image
-        fetch_image(image_url, save_path)
+    N = 5  # Number of times to run the download process
+    formatted_filename = datetime.now().strftime('%Y.%m.%d.%H.%M.%S_results.txt')
+    
+    for _ in range(N):
+        for image_name in images_list:
+            image_url = f'http://localhost:8000/{image_name}'  # URL of the image on the server
+            save_path = "sample_received.jpg"
+            # save_path = image_name  # Path to save the image
+            fetch_image(image_url, save_path, formatted_filename)
