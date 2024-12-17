@@ -3,8 +3,7 @@ import time
 from datetime import datetime
 
 images_list = ["image_33kb.jpg", "image_53kb.jpg", "image_100kb.jpg", "image_500kb.jpg",
-               "image_1mb.jpg", "image_5mb.jpg", "image_10mb.jpg", "image_20mb.jpg",
-               "image_105mb.jpg"]
+               "image_1mb.jpg", "image_5mb.jpg", "image_10mb.jpg", "image_20mb.jpg"]
 
 def fetch_image(image_url, save_path, image_name, result_file):
     start_time = time.time()
