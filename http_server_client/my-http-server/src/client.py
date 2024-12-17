@@ -14,7 +14,7 @@ def fetch_image(image_url, save_path, image_name, result_file):
     if response.status_code == 200:
         with open(save_path, 'wb') as file:
             file.write(response.content)
-        print(f'Image saved to {save_path}')
+        # print(f'Image saved to {save_path}') # for debug
         
         # Calculate transfer time and throughput
         transfer_time = (end_time - start_time) * 1000  # in milliseconds
