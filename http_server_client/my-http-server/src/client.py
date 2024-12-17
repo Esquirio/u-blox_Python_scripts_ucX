@@ -20,7 +20,7 @@ def fetch_image(image_url, save_path, result_file):
         transfer_time = (end_time - start_time) * 1000  # in milliseconds
         image_size = len(response.content)  # in bytes
         image_size_kb = image_size / 1024  # in kilobytes
-        throughput = (image_size) / (end_time - start_time) / (1024 * 1024)  # in Mbps
+        # throughput = (image_size * 8) / (end_time - start_time) / (1024 * 1024)  # in Mbps
         
         formatted_start_time = datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')
         
@@ -29,7 +29,7 @@ def fetch_image(image_url, save_path, result_file):
             f'Download image {save_path}\n'
             f'Start time: {formatted_start_time}\n'
             f'Transfer time: {transfer_time:.2f} milliseconds\n'
-            f'Throughput: {throughput:.2f} Mbps\n'
+            # f'Throughput: {throughput:.2f} Mbps\n'
             f'Received data: {image_size_kb:.2f} kB\n'
             f'***************************************************\n\n'
         )
@@ -43,11 +43,13 @@ def fetch_image(image_url, save_path, result_file):
 
 if __name__ == "__main__":
     N = 5  # Number of times to run the download process
+    ip_address = "192.168.2.100"
+    port = 4043
     formatted_filename = datetime.now().strftime('%Y.%m.%d.%H.%M.%S_results.txt')
     
     for _ in range(N):
-        for image_name in images_list:
-            image_url = f'http://localhost:8000/{image_name}'  # URL of the image on the server
-            save_path = "sample_received.jpg"
-            # save_path = image_name  # Path to save the image
-            fetch_image(image_url, save_path, formatted_filename)
+        image_name = images_list[8]
+        image_url = f'http://{ip_address}:{port}/{image_name}'  # URL of the image on the server
+        save_path = "sample_received.jpg"
+        # save_path = image_name  # Path to save the image
+        fetch_image(image_url, save_path, formatted_filename)
