@@ -6,7 +6,7 @@ images_list = ["image_33kb.jpg", "image_53kb.jpg", "image_100kb.jpg", "image_500
                "image_1mb.jpg", "image_5mb.jpg", "image_10mb.jpg", "image_20mb.jpg",
                "image_105mb.jpg"]
 
-def fetch_image(image_url, save_path, result_file):
+def fetch_image(image_url, save_path, image_name, result_file):
     start_time = time.time()
     response = requests.get(image_url)
     end_time = time.time()
@@ -26,7 +26,7 @@ def fetch_image(image_url, save_path, result_file):
         
         result = (
             f'***************************************************\n'
-            f'Download image {save_path}\n'
+            f'Download image {image_name}\n'
             f'Start time: {formatted_start_time}\n'
             f'Transfer time: {transfer_time:.2f} milliseconds\n'
             # f'Throughput: {throughput:.2f} Mbps\n'
@@ -42,7 +42,7 @@ def fetch_image(image_url, save_path, result_file):
         print(f'Failed to fetch image. Status code: {response.status_code}')
 
 if __name__ == "__main__":
-    N = 5  # Number of times to run the download process
+    N = 100  # Number of times to run the download process
     ip_address = "192.168.2.100"
     port = 4043
     formatted_filename = datetime.now().strftime('%Y.%m.%d.%H.%M.%S_results.txt')
@@ -52,4 +52,4 @@ if __name__ == "__main__":
         image_url = f'http://{ip_address}:{port}/{image_name}'  # URL of the image on the server
         save_path = "sample_received.jpg"
         # save_path = image_name  # Path to save the image
-        fetch_image(image_url, save_path, formatted_filename)
+        fetch_image(image_url, save_path, image_name, formatted_filename)
