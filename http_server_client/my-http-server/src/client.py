@@ -34,7 +34,7 @@ def fetch_image(image_url, save_path, image_name, result_file):
             f'***************************************************\n\n'
         )
         
-        print(result)
+        # print(result) # For debug
         
         with open(result_file, 'a') as file:
             file.write(result)
