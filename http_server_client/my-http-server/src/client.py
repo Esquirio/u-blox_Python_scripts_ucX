@@ -2,11 +2,9 @@ import requests
 import time
 from datetime import datetime
 
-images = ["image_33kb.jpg", "image_53kb.jpg", "image_100kb.jpg", "image_500kb.jpg",
-            "image_1mb.jpg", "image_5mb.jpg", "image_10mb.jpg", "image_20mb.jpg",
-            "image_105mb.jpg"]
-
-image_name = images[0]  # Replace with the name of the image you want to fetch
+images_list = ["image_33kb.jpg", "image_53kb.jpg", "image_100kb.jpg", "image_500kb.jpg",
+               "image_1mb.jpg", "image_5mb.jpg", "image_10mb.jpg", "image_20mb.jpg",
+               "image_105mb.jpg"]
 
 def fetch_image(image_url, save_path):
     start_time = time.time()
@@ -25,15 +23,27 @@ def fetch_image(image_url, save_path):
         throughput = (image_size * 8) / (end_time - start_time) / (1024 * 1024)  # in Mbps
         
         formatted_start_time = datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')
+        formatted_filename = datetime.fromtimestamp(start_time).strftime('%Y.%m.%d.%H.%M.%S_results.txt')
         
-        print(f'Start time: {formatted_start_time}')
-        print(f'Transfer time: {transfer_time:.2f} milliseconds')
-        print(f'Throughput: {throughput:.2f} Mbps')
-        print(f'Received data: {image_size_kb:.2f} kB')
+        result = (
+            f'***************************************************\n'
+            f'Download image {save_path}\n'
+            f'Start time: {formatted_start_time}\n'
+            f'Transfer time: {transfer_time:.2f} milliseconds\n'
+            f'Throughput: {throughput:.2f} Mbps\n'
+            f'Received data: {image_size_kb:.2f} kB\n'
+            f'***************************************************\n\n'
+        )
+        
+        print(result)
+        
+        with open(formatted_filename, 'w') as file:
+            file.write(result)
     else:
         print(f'Failed to fetch image. Status code: {response.status_code}')
 
 if __name__ == "__main__":
-    image_url = f'http://localhost:8000/{image_name}'  # URL of the image on the server
-    save_path = 'sample_received.jpg'  # Path to save the image
-    fetch_image(image_url, save_path)
+    for image_name in images_list:
+        image_url = f'http://localhost:8000/{image_name}'  # URL of the image on the server
+        save_path = "sample_received.jpg"  # Path to save the image
+        fetch_image(image_url, save_path)
