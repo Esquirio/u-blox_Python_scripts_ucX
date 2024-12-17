@@ -45,11 +45,11 @@ if __name__ == "__main__":
     N = 100  # Number of times to run the download process
     ip_address = "192.168.2.100"
     port = 4043
-    formatted_filename = datetime.now().strftime('%Y.%m.%d.%H.%M.%S_results.txt')
+    filename = datetime.now().strftime('%Y.%m.%d.%H.%M.%S_results.txt')
     
     for _ in range(N):
         image_name = images_list[8]
         image_url = f'http://{ip_address}:{port}/{image_name}'  # URL of the image on the server
         save_path = "sample_received.jpg"
         # save_path = image_name  # Path to save the image
-        fetch_image(image_url, save_path, image_name, formatted_filename)
+        fetch_image(image_url, save_path, image_name, filename)
