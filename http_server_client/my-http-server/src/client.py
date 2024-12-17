@@ -2,6 +2,12 @@ import requests
 import time
 from datetime import datetime
 
+images = ["image_33kb.jpg", "image_53kb.jpg", "image_100kb.jpg", "image_500kb.jpg",
+            "image_1mb.jpg", "image_5mb.jpg", "image_10mb.jpg", "image_20mb.jpg",
+            "image_105mb.jpg"]
+
+image_name = images[0]  # Replace with the name of the image you want to fetch
+
 def fetch_image(image_url, save_path):
     start_time = time.time()
     response = requests.get(image_url)
@@ -28,6 +34,6 @@ def fetch_image(image_url, save_path):
         print(f'Failed to fetch image. Status code: {response.status_code}')
 
 if __name__ == "__main__":
-    image_url = 'http://localhost:8000/sample.jpg'  # URL of the image on the server
+    image_url = f'http://localhost:8000/{image_name}'  # URL of the image on the server
     save_path = 'sample_received.jpg'  # Path to save the image
     fetch_image(image_url, save_path)
