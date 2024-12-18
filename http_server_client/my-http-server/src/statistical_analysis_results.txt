@@ -1,0 +1,105 @@
+Processing file: 2024.12.17.22.06.05_results.txt
+Image file: image_33kb.jpg
+Mean: 42.63 ms
+Median: 40.00 ms
+Standard Deviation: 17.88 ms
+Variance: 319.60 ms
+
+Processing file: 2024.12.17.22.06.33_results.txt
+Image file: image_53kb.jpg
+Mean: 76.23 ms
+Median: 60.06 ms
+Standard Deviation: 49.53 ms
+Variance: 2452.86 ms
+
+Processing file: 2024.12.17.22.06.52_results.txt
+Image file: image_100kb.jpg
+Mean: 118.11 ms
+Median: 90.07 ms
+Standard Deviation: 83.76 ms
+Variance: 7015.48 ms
+
+Processing file: 2024.12.17.22.07.10_results.txt
+Image file: image_500kb.jpg
+Mean: 393.21 ms
+Median: 377.31 ms
+Standard Deviation: 71.08 ms
+Variance: 5052.99 ms
+
+Processing file: 2024.12.17.22.07.57_results.txt
+Image file: image_1mb.jpg
+Mean: 791.80 ms
+Median: 771.25 ms
+Standard Deviation: 95.72 ms
+Variance: 9162.43 ms
+
+Processing file: 2024.12.17.22.09.26_results.txt
+Image file: image_5mb.jpg
+Mean: 3698.07 ms
+Median: 3684.59 ms
+Standard Deviation: 211.66 ms
+Variance: 44798.49 ms
+
+Processing file: 2024.12.17.22.16.02_results.txt
+Image file: image_10mb.jpg
+Mean: 7072.18 ms
+Median: 6831.10 ms
+Standard Deviation: 1063.49 ms
+Variance: 1131020.27 ms
+
+Processing file: 2024.12.17.22.28.03_results.txt
+Image file: image_20mb.jpg
+Mean: 14720.89 ms
+Median: 14440.28 ms
+Standard Deviation: 1196.13 ms
+Variance: 1430731.25 ms
+
+Processing file: 2024.12.18.13.08.47_results.txt
+Image file: image_33kb.jpg
+Mean: 89.48 ms
+Median: 76.44 ms
+Standard Deviation: 84.23 ms
+Variance: 7094.70 ms
+
+Processing file: 2024.12.18.13.08.58_results.txt
+Image file: image_53kb.jpg
+Mean: 138.38 ms
+Median: 95.27 ms
+Standard Deviation: 123.20 ms
+Variance: 15178.84 ms
+
+Processing file: 2024.12.18.13.09.13_results.txt
+Image file: image_100kb.jpg
+Mean: 258.56 ms
+Median: 187.57 ms
+Standard Deviation: 182.33 ms
+Variance: 33245.51 ms
+
+Processing file: 2024.12.18.13.09.41_results.txt
+Image file: image_500kb.jpg
+Mean: 791.03 ms
+Median: 684.38 ms
+Standard Deviation: 255.24 ms
+Variance: 65147.49 ms
+
+Processing file: 2024.12.18.13.11.01_results.txt
+Image file: image_1mb.jpg
+Mean: 1478.51 ms
+Median: 1422.71 ms
+Standard Deviation: 268.38 ms
+Variance: 72025.81 ms
+
+Processing file: 2024.12.18.13.13.31_results.txt
+Image file: image_5mb.jpg
+Mean: 7558.31 ms
+Median: 7564.32 ms
+Standard Deviation: 822.71 ms
+Variance: 676851.42 ms
+
+Processing file: 2024.12.18.13.26.08_results.txt
+Image file: image_10mb.jpg
+Mean: 13188.13 ms
+Median: 12868.69 ms
+Standard Deviation: 1766.61 ms
+Variance: 3120899.94 ms
+
