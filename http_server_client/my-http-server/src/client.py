@@ -13,8 +13,7 @@ power_mode_config = "AT+UWCFG=1,0" # 0: Wi-Fi ACTIVE mode
                                    # 2 (default): Wi-Fi SLEEP mode
 
 images_list = ["image_33kb.jpg", "image_53kb.jpg", "image_100kb.jpg", "image_500kb.jpg",
-               "image_1mb.jpg", "image_5mb.jpg", "image_10mb.jpg", "image_20mb.jpg",
-               "image_105mb.jpg"]
+               "image_1mb.jpg", "image_5mb.jpg", "image_10mb.jpg", "image_20mb.jpg"]
 
 def fetch_image(image_url, image_name, result_file):
   # Ensure the results directory exists
@@ -34,21 +33,24 @@ def fetch_image(image_url, image_name, result_file):
   image_file_path = os.path.join(rec_images_dir, image_name)
   
   start_time = time.time()
+  formatted_start_time = datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')
+  print(f'Start time: {formatted_start_time}\n')
+
   response = requests.get(image_url)
   end_time = time.time()
+  formatted_end_time = datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')
+  print(f'Start time: {formatted_end_time}\n')
     
   if response.status_code == 200:
     with open(image_file_path, 'wb') as file:
         file.write(response.content)
-    # print(f'Image saved to {image_file_path}')
+    # print(f'Image saved to {image_file_path}') # For debug
     
     # Calculate transfer time and throughput
     transfer_time = (end_time - start_time) * 1000  # in milliseconds
     image_size = len(response.content)  # in bytes
     image_size_kb = image_size / 1024  # in kilobytes
     throughput = (image_size * 8) / (end_time - start_time) / (1024 * 1024)  # in Mbps
-    
-    formatted_start_time = datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')
     
     result = (
         f'***************************************************\n'
@@ -61,7 +63,7 @@ def fetch_image(image_url, image_name, result_file):
         f'***************************************************\n\n'
     )
     
-    # print(result)
+    # print(result)  # For debug
     
     with open(result_file_path, 'a') as file:
         file.write(result)
@@ -70,8 +72,13 @@ def fetch_image(image_url, image_name, result_file):
 
 if __name__ == "__main__":  
   for image_name in images_list:
-    print(f'Fetching image: {image_name}\n')
+    print(f'***************************************************')
+    print(f'Fetching image: {image_name}')
+    
     filename = datetime.now().strftime('%Y.%m.%d.%H.%M.%S_results.txt')
+    
     for i in range(N):
       image_url = f'http://{ip_address}:{port}/{image_name}'  # URL of the image on the server
       fetch_image(image_url, image_name, filename)
+    
+    print(f'***************************************************\n')
