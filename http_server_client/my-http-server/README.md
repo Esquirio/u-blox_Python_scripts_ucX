@@ -45,7 +45,7 @@ The server will start and listen for incoming requests.
 Once the server is running, you can access the images by navigating to:
 
 ```
-http://localhost:8000/images/sample.jpg
+http://{host_ip_address}:{port}/sample.jpg
 ```
 
 Replace `sample.jpg` with the name of any other image file in the `images` folder to view it.
