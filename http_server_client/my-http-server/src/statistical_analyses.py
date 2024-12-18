@@ -6,7 +6,7 @@ from scipy.stats import norm
 
 # Define the directory to search for .txt files
 results_dir = 'results'
-images_dir = 'images'
+images_dir = 'graphs'
 
 # Create the images directory if it doesn't exist
 if not os.path.exists(images_dir):
