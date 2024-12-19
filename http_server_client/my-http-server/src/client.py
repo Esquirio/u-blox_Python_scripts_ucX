@@ -58,7 +58,7 @@ def fetch_image(image_url, image_name, result_file):
     throughput = (image_size * 8) / (end_time - start_time) / (1024 * 1024)  # in Mbps
     
     result = (
-        f'{Fore.CYAN}***************************************************\n'
+        f'***************************************************\n'
         f'NINA Power mode configuration: {power_mode_config}\n'
         f'Download image {image_name}\n'
         f'Start time: {formatted_start_time}\n'
