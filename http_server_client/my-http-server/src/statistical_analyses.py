@@ -64,14 +64,18 @@ with open('statistical_analysis_results.txt', 'w') as result_file:
         p = norm.pdf(x, mean_transfer_time, std_dev_transfer_time)
         plt.plot(x, p, 'k', linewidth=2, label='Normal Distribution')
 
-        title = f"Results for {image_name}:\nmean = {mean_transfer_time:.2f} ms std dev = {std_dev_transfer_time:.2f} ms\nNINA Power mode: {nina_power_mode}"
-        plt.title(title, fontdict={'fontsize': 14, 'fontweight': 'bold'})
+        # Add legend
+        legend = plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0., fontsize=12, frameon=True, fancybox=True, framealpha=0.5)
 
+        # Add lateral text block with mean and std dev information
+        textstr = f"Mean: {mean_transfer_time:.2f} ms\nStd Dev: {std_dev_transfer_time:.2f} ms"
+        plt.gcf().text(0.735, 0.7, textstr, fontsize=12, bbox=dict(facecolor='white', edgecolor='lightgray', boxstyle='round,pad=0.2', alpha=0.5), ha='left', va='center')
+
+        plt.subplots_adjust(right=0.7)  # Adjust the subplot to add padding on the right
+
+        plt.title(f"Transfer time results for {image_name}\nNINA-Power mode: {nina_power_mode}", fontdict={'fontsize': 14, 'fontweight': 'bold'})
         plt.xlabel('Transfer Time (ms)')
         plt.ylabel('Density')
-
-        # Add legend
-        plt.legend()
 
         # Save the plot as an image file with date and image name
         output_filename = os.path.join(images_dir, f'{date_str}_{image_name}_results.png')
