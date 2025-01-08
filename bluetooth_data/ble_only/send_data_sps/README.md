@@ -31,7 +31,7 @@ pip install colorama
 Run the script with the following command:
 
 ```sh
-python ubx_send_data_ble.py -a <Bluetooth_Address>
+python ubx_send_data_ble_sps.py -a <Bluetooth_Address>
 ```
 
 ### Arguments
@@ -41,7 +41,7 @@ python ubx_send_data_ble.py -a <Bluetooth_Address>
 ### Example
 
 ```sh
-python ubx_send_data_ble.py -a 00:1A:7D:DA:71:13
+python ubx_send_data_ble_sps.py -a 00:1A:7D:DA:71:13
 ```
 
 ## Notes
