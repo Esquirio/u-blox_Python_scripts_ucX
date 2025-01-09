@@ -20,6 +20,10 @@ AT+UDSF=0,2
 +UUDATA:1,1010
 AT+UDATR=1,2,1010
 
+# Reboot after create the BT servers
+AT&W
+AT+CPWROFF
+
 # Server BLE
 AT+UDSC=1,0
 AT+UDSC=1,6
