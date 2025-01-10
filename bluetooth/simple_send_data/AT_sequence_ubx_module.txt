@@ -1,0 +1,34 @@
+# AT sequence to configure the u-lox module
+
+AT+UBTLN="__NINA_test"
+AT+UBTCM=2
+AT+UBTDM=3
+AT+UBTPM=2
+AT+UBTLE=2
+AT+UBTMODE=3
+AT+UBTMSP=1
+AT+UBTLC=000000
+AT&W
+AT+CPWROFF
+
+# Server Bluetooth classic
+AT+UDSC=0,0
+AT+UDSC=0,3,"SPP"
+AT+UDSF=0,2
+
+# Reboot after create the BT servers
+AT&W
+AT+CPWROFF
+
+# Server BLE
+AT+UDSC=1,0
+AT+UDSC=1,6
+AT+UDSF=1,2
+AT&W
+AT+CPWROFF
+
+
+AT+UBTGSER=4906276bda6a4a6cbf9473c61b96433c
+AT+UBTGCHA=49af5250f17646c5b99aa163a672c042,1e,1,1,00
+
+-----------------------------------------------------------------------------------------------
