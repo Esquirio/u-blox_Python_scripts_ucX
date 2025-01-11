@@ -41,6 +41,7 @@ python ubx_send_data_bt.py -a <TARGET_ADDRESS> -t <TYPE> --data_size <MAX_DATA_S
 - `-t`, `--type`: The type of Bluetooth connection (`classic` or `ble`) (required).
 - `--data_size`: The maximum number of characters to send (required). The script will send data starting from 1 byte up to the specified maximum size.
 - `--xtimes`: The number of times the script should run for each data size (required). If set to 0, the script will send the maximum data size once.
+- `--debug`: Enable debug messages
 
 Change the `service_uuid` and `characteristic_uuid` for the one that was configured on the u-blox module.
 For the service and characteristic defined in the u-blox Serial Port Service (SPS), use:
@@ -59,10 +60,10 @@ Sending data via Bluetooth Classic to a target device with address `00:1A:7D:DA:
 python ubx_send_data_bt.py -a 00:1A:7D:DA:71:13 -t classic --data_size 5000 --xtimes 1
 ```
 
-Sending data via BLE to a target device with address `00:1A:7D:DA:71:13`, with a maximum data size of 10 bytes, running the script 5 times for each data size:
+Sending data via BLE to a target device with address `00:1A:7D:DA:71:13`, with a maximum data size of 10 bytes, running the script 5 times for each data size and enabling the debug messages:
 
 ```sh
-python ubx_send_data_bt.py -a 00:1A:7D:DA:71:13 -t ble --data_size 10 --xtimes 5
+python ubx_send_data_bt.py -a 00:1A:7D:DA:71:13 -t ble --data_size 10 --xtimes 5 --debug
 ```
 
 Sending the 2000 bytes via Bluetooth Classic once:
