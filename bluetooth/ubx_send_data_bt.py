@@ -13,6 +13,8 @@ try:
 except ImportError:
     BleakClient = None
 
+debug = False
+
 def generate_random_data(length):
     """
     Generates a random string of the specified length.
@@ -41,7 +43,8 @@ def send_data_via_bluetooth_classic(sock, data):
     try:
         # Send data
         sock.send(data)
-        print(Fore.GREEN + f"Sending {len(data)} bytes:\n{data}")
+        if debug:
+            print(Fore.GREEN + f"Sending {len(data)} bytes:\n{data}")
     except bluetooth.BluetoothError as e:
         print(Fore.RED + f"Bluetooth error: {e}")
 
@@ -55,16 +58,19 @@ async def find_service_and_characteristic(client, service_uuid, characteristic_u
     :return: The matched service and characteristic UUIDs, or None if not found.
     """
     if client.is_connected:
-        print(Fore.CYAN + f"Connected to {client.address}")
+        if debug:
+            print(Fore.CYAN + f"Connected to {client.address}")
         
         # Get all services
         services = client.services
         for service in services:
             if service.uuid == service_uuid:
-                print(Fore.CYAN + f"Matching service found: {service.uuid}")
+                if debug:
+                    print(Fore.CYAN + f"Matching service found: {service.uuid}")
                 for characteristic in service.characteristics:
                     if characteristic.uuid == characteristic_uuid:
-                        print(Fore.CYAN + f"Matching characteristic found: {characteristic.uuid}")
+                        if debug:
+                            print(Fore.CYAN + f"Matching characteristic found: {characteristic.uuid}")
                         return service.uuid, characteristic.uuid
 
         print(Fore.RED + "No matching service or characteristic found.")
@@ -79,16 +85,11 @@ async def send_data_sps(client, data, characteristic_uuid):
     :param characteristic_uuid: The characteristic UUID to match.
     """
     
-    # Limit the data length to 4148 bytes
-    # (the maximum data length was found by testing with the u-blox NINA-B2 module)
-    if len(data) > 4148:
-        data = data[:4148]
-        print(Fore.YELLOW + "Data length exceeds 4148 bytes. Limiting to 4148 bytes.")
-    
     await client.start_notify(characteristic_uuid, notification_handler)
     await client.write_gatt_char(characteristic_uuid, data.encode())
     
-    print(Fore.GREEN + f"Sending {len(data)} bytes:\n{data}")
+    if debug:
+        print(Fore.GREEN + f"Sending {len(data)} bytes:\n{data}")
 
     await asyncio.sleep(1)  # Wait for notification
     await client.stop_notify(characteristic_uuid)
@@ -107,11 +108,13 @@ async def write_data_gatt(client, data, characteristic_uuid):
     # Section: 12.2 GATT Define a characteristic +UBTGCHA
     if len(data) > 244:
         data = data[:244]
-        print(Fore.YELLOW + "Data length exceeds 244 bytes. Limiting to 244 bytes.")
+        if debug:
+            print(Fore.YELLOW + "Data length exceeds 244 bytes. Limiting to 244 bytes.")
     
     await client.write_gatt_char(characteristic_uuid, data.encode())
     hex_data = data_to_hex(data)
-    print(Fore.GREEN + f"Sending {len(data)} bytes:\n{hex_data}")
+    if debug:
+        print(Fore.GREEN + f"Sending {len(data)} bytes:\n{hex_data}")
 
 def notification_handler(sender, data):
     """
@@ -143,7 +146,7 @@ async def write_gatt_char_ble(client, data, service_uuid, characteristic_uuid):
     else:
         print(Fore.RED + "Service or characteristic not found. Cannot send data.")
 
-async def read_gatt_char_value(client, service_uuid, characteristic_uuid, sps=False):
+async def read_gatt_char_value(client, data, service_uuid, characteristic_uuid, sps=False):
     """
     Finds the matching service and characteristic and reads data from the Bluetooth device.
 
@@ -155,17 +158,22 @@ async def read_gatt_char_value(client, service_uuid, characteristic_uuid, sps=Fa
 
     if service_uuid and characteristic_uuid:
         if client.is_connected:
-            print(Fore.CYAN + f"Reading data from characteristic {characteristic_uuid}...")
-            data = await client.read_gatt_char(characteristic_uuid)
+            if debug:
+                print(Fore.CYAN + f"Reading data from characteristic {characteristic_uuid}...")
+            data_receive = await client.read_gatt_char(characteristic_uuid)
 
+            assert data == data_receive.decode(), "Data read does not match data sent"
+            print(Fore.YELLOW + "Data read matches data sent")
             if sps:
                 # Convert the bytes data to a string and print it
-                data = data.decode()
-                print(Fore.GREEN + f"Data read: {data}")
+                data_receive = data_receive.decode()
+                if debug:
+                    print(Fore.GREEN + f"Data read: {data_receive}")
             else:
                 # Convert the bytes data to a hex string and print it
-                hex_data = ' '.join(f"{byte:02X}" for byte in data)
-                print(Fore.GREEN + f"Data read: {hex_data}")
+                hex_data = ' '.join(f"{byte:02X}" for byte in data_receive)
+                if debug:
+                    print(Fore.GREEN + f"Data read: {hex_data}")
     else:
         print(Fore.RED + "Service or characteristic not found. Cannot read data.")
 
@@ -180,6 +188,8 @@ async def main_ble(target_address, service_uuid, characteristic_uuid, max_data_s
     :param xtimes: The number of times the script should run.
     """
     try:
+        assert max_data_size <= 4148, "Data size exceeds the maximum limit of 4148 bytes"
+
         if BleakClient is None:
             raise ImportError("bleak library is not installed")
         
@@ -189,13 +199,13 @@ async def main_ble(target_address, service_uuid, characteristic_uuid, max_data_s
             if xtimes == 0:
                 data = generate_random_data(max_data_size)
                 await write_gatt_char_ble(client, data, service_uuid, characteristic_uuid)
-                await read_gatt_char_value(client, service_uuid, characteristic_uuid, True)
+                await read_gatt_char_value(client, data, service_uuid, characteristic_uuid, True)
             else:
                 for i in range(1, max_data_size + 1):
                     for _ in range(xtimes):
                         data = generate_random_data(i)
                         await write_gatt_char_ble(client, data, service_uuid, characteristic_uuid)
-                        await read_gatt_char_value(client, service_uuid, characteristic_uuid)
+                        await read_gatt_char_value(client, data, service_uuid, characteristic_uuid)
                         await asyncio.sleep(1)
     except Exception as e:
         print(Fore.RED + f"BLE error: {e}")
@@ -217,7 +227,8 @@ async def main_classic(target_address, port, max_data_size, xtimes):
     try:
         # Connect to the target Bluetooth device
         sock.connect((target_address, port))
-        print(Fore.CYAN + f"Connected to {target_address} on port {port}")
+        if debug:
+            print(Fore.CYAN + f"Connected to {target_address} on port {port}")
         
         if xtimes == 0:
             data = generate_random_data(max_data_size)
@@ -234,7 +245,8 @@ async def main_classic(target_address, port, max_data_size, xtimes):
     finally:
         # Close the socket
         sock.close()
-        print(Fore.CYAN + "Connection closed")
+        if debug:
+            print(Fore.CYAN + "Connection closed")
 
 def format_mac_address(mac):
     """
@@ -253,7 +265,10 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--type", choices=["classic", "ble"], required=True, help="Type of Bluetooth connection (classic or ble)")
     parser.add_argument("--data_size", type=int, required=True, help="Maximum number of characters to send")
     parser.add_argument("--xtimes", type=int, required=True, help="Number of times the script should run for each data size")
+    parser.add_argument("--debug", action="store_true", help="Enable debug messages")
     args = parser.parse_args()
+    
+    debug = args.debug
     
     service_uuid = "2456e1b9-26e2-8f83-e744-f34f01e9d701"
     characteristic_uuid = "2456e1b9-26e2-8f83-e744-f34f01e9d703"
