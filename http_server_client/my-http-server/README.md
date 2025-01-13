@@ -32,6 +32,10 @@ pip install -r requirements.txt
 
 ### Running the Server
 
+Change the variable value:
+```
+port = 4043  # Sever port
+```
 To start the HTTP server, run the following command:
 
 ```
@@ -39,6 +43,22 @@ python src/server.py
 ```
 
 The server will start and listen for incoming requests.
+
+### Running the Client
+
+Change the variables values:
+```
+N = 100  # Number of times to run the download process
+host_ip_address = "192.168.0.115"  # Host IP address
+port = 4043  # Sever port
+```
+
+To start the HTTP client, run the following command:
+
+```
+python src/server.py
+```
+
 
 ### Accessing Images
 
