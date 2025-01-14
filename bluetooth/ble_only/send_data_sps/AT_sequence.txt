@@ -5,8 +5,6 @@ AT+UBTDM=3
 AT+UBTPM=2
 AT+UBTLE=2
 AT+UBTMODE=2
-AT+UBTMSP=1
-AT+UBTLC=000000
 
 # Server BLE (Only for u-blox Espressif modules)
 AT+UDSC=1,0
@@ -14,8 +12,5 @@ AT+UDSC=1,6
 AT+UDSF=1,2
 AT&W
 AT+CPWROFF
-
-AT+UBTGSER=4906276bda6a4a6cbf9473c61b96433c
-AT+UBTGCHA=49af5250f17646c5b99aa163a672c042,1e,1,1,00
 
 -----------------------------------------------------------------------------------------------
