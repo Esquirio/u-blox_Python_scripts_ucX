@@ -185,7 +185,7 @@ async def main_ble(target_address, service_uuid, characteristic_uuid, max_data_s
     :param xtimes: The number of times the script should run.
     """
     try:
-        assert max_data_size <= 4148, "Data size exceeds the maximum limit of 4148 bytes"
+        # assert max_data_size <= 4148, "Data size exceeds the maximum limit of 4148 bytes"
 
         if BleakClient is None:
             raise ImportError("bleak library is not installed")
