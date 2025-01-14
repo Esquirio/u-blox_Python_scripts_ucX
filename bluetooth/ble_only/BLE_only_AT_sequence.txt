@@ -1,5 +1,5 @@
 # AT sequence to configure the u-blox module
-AT+UBTLN="__NINA-B22_test"
+AT+UBTLN="__NINA_test"
 AT+UBTCM=2
 AT+UBTDM=3
 AT+UBTPM=2
