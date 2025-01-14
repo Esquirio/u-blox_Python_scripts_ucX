@@ -106,10 +106,7 @@ async def write_data_gatt(client, data, characteristic_uuid):
     # Limit the data length to 244 bytes as per u-blox documentation
     # Document: u-connectXpress-ATCommands-Manual_UBX-14044127
     # Section: 12.2 GATT Define a characteristic +UBTGCHA
-    if len(data) > 244:
-        data = data[:244]
-        if debug:
-            print(Fore.YELLOW + "Data length exceeds 244 bytes. Limiting to 244 bytes.")
+    assert len(data) <= 244, "Data size exceeds the maximum limit of 244 bytes"
     
     await client.write_gatt_char(characteristic_uuid, data.encode())
     hex_data = data_to_hex(data)
