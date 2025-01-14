@@ -8,8 +8,6 @@ AT+UBTLE=2
 AT+UBTMODE=3
 AT+UBTMSP=1
 AT+UBTLC=000000
-AT&W
-AT+CPWROFF
 
 # Server Bluetooth classic
 AT+UDSC=0,0
@@ -20,14 +18,12 @@ AT+UDSF=0,2
 +UUDATA:1,1010
 AT+UDATR=1,2,1010
 
-# Reboot after create the BT servers
-AT&W
-AT+CPWROFF
-
 # Server BLE
 AT+UDSC=1,0
 AT+UDSC=1,6
 AT+UDSF=1,2
+
+# Reboot after create the BT servers
 AT&W
 AT+CPWROFF
 
