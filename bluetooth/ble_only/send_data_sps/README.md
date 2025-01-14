@@ -37,11 +37,16 @@ python ubx_send_data_ble_sps.py -a <Bluetooth_Address>
 ### Arguments
 
 - `-a`, `--address`: The target Bluetooth address (required).
+- `--debug`: Enable debug messages
 
 ### Example
 
 ```sh
 python ubx_send_data_ble_sps.py -a 00:1A:7D:DA:71:13
+```
+or to enable the debuf messages
+```sh
+python ubx_send_data_ble_sps.py -a 00:1A:7D:DA:71:13 --debug
 ```
 
 ## Notes
