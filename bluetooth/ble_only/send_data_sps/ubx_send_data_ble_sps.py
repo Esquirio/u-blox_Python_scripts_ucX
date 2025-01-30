@@ -117,7 +117,7 @@ async def main_ble(target_address):
     :param target_address: The target Bluetooth address.
     """
     service_uuid = "2456e1b9-26e2-8f83-e744-f34f01e9d701"
-    characteristic_uuid = "2456e1b9-26e2-8f83-e744-f34f01e9d703"
+    characteristic_uuid = "2456e1b9-26e2-8f83-e744-f34f01e9d704"
     
     try:
         if BleakClient is None:
