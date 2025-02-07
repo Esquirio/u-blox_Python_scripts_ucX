@@ -48,6 +48,10 @@ python mqtt_tester.py -b 10.12.71.47 -p 1883 -fk anchor_name -fv AP01 AP02 AP03 
 
 This command will connect to the MQTT broker at `10.12.71.47` on port `1883`, subscribe to the topic `angles`, and filter messages based on the key `anchor_name` with values `AP01`, `AP02` and `AP03`. The script will run for 30 seconds or until all filter values are found.
 
+```sh
+python mqtt_tester.py -b 10.12.71.47 -p 1883 -fk anchor_id -fv 54F82A53C7E1 54F82A53C7E2 -t 30
+```
+
 This command will connect to the MQTT broker at `10.12.71.47` on port `1883`, subscribe to the topic `angles`, and filter messages based on the key `anchor_id` with values `54F82A53C7E1` and `54F82A53C7E2`. The script will run for 30 seconds or until all filter values are found.
 
 ## License
