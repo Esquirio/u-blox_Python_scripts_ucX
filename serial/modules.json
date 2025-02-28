@@ -1,18 +1,18 @@
 {
     "transmitter": {
         "COMPORT": "COM194",
-        "baudrate": 115200,
+        "baudrate": 3000000,
         "mac_address": "00:1A:7D:DA:71:13"
     },
     "receiver": {
         "COMPORT": "COM201",
-        "baudrate": 9600,
+        "baudrate": 3000000,
         "mac_address": "6C:1D:EB:3F:E1:E6"
     },
     "data": {
         "data_size": 128,
-        "xtimes": 1,
-        "interval_ms": 11
+        "xtimes": 20,
+        "interval_ms": 3
     },
     "debug": {
         "debug": true

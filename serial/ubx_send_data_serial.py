@@ -74,11 +74,11 @@ def configure_module(spa, target_address):
 
     # Reset device
     spa.enterCommandMode() # +++ 1s +++
-    spa.command("AT+UFACTORY")
-    spa.command("AT+CPWROFF")
-    spa.waitForStartup()
-    if debug:
-        print(f"{Fore.CYAN}Factory reset complete")
+    # spa.command("AT+UFACTORY")
+    # spa.command("AT+CPWROFF")
+    # spa.waitForStartup()
+    # if debug:
+    #     print(f"{Fore.CYAN}Factory reset complete")
 
     # Set Central
     spa.command("AT+UBTMODE=1")
@@ -104,7 +104,7 @@ def open_serial(com_port, baudrate, rtscts=True):
     global debug
     try:
         if debug:
-            print(f"{Fore.CYAN}Opening serial port {Fore.YELLOW}{com_port} {Fore.CYAN}at {Fore.YELLOW}{baudrate} {Fore.CYAN}baud")
+            print(f"{Fore.CYAN}Opening serial port {Fore.YELLOW}{com_port} {Fore.CYAN}at {Fore.YELLOW}{baudrate} {Fore.CYAN}baudrate")
 
         port = serial.Serial(com_port, baudrate, rtscts=rtscts, timeout=1)
         port.reset_input_buffer()
