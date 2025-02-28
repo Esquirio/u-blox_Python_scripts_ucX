@@ -64,6 +64,8 @@ def send_data(port, data, i):
         port.write(data.encode())
     except serial.SerialException as e:
         print(f"{Fore.RED}Serial error: {e}")
+    except Exception as e:
+        print(f"{Fore.RED}Failed to send data: {e}")
 
 def configure_module(spa, target_address):
     global debug
@@ -100,13 +102,17 @@ def configure_module(spa, target_address):
 
 def open_serial(com_port, baudrate, rtscts=True):
     global debug
-    if debug:
-        print(f"{Fore.CYAN}Opening serial port {Fore.YELLOW}{com_port} {Fore.CYAN}at {Fore.YELLOW}{baudrate} {Fore.CYAN}baud")
+    try:
+        if debug:
+            print(f"{Fore.CYAN}Opening serial port {Fore.YELLOW}{com_port} {Fore.CYAN}at {Fore.YELLOW}{baudrate} {Fore.CYAN}baud")
 
-    port = serial.Serial(com_port, baudrate, rtscts=rtscts, timeout=1)
-    port.reset_input_buffer()
-    port.reset_output_buffer()
-    return port
+        port = serial.Serial(com_port, baudrate, rtscts=rtscts, timeout=1)
+        port.reset_input_buffer()
+        port.reset_output_buffer()
+        return port
+    except serial.SerialException as e:
+        print(f"{Fore.RED}Failed to open serial port {com_port}: {e}")
+        return None
 
 def load_config(file_path):
     with open(file_path, 'r') as file:
@@ -133,6 +139,9 @@ def main():
         print(f"{Fore.GREEN}Target address: {Fore.YELLOW}{target_address}")
 
     transmitter = open_serial(transmitter_config['COMPORT'], transmitter_config['baudrate'], rtscts=True)
+    if transmitter is None:
+        return
+
     transmitter.reset_input_buffer()
     transmitter.reset_output_buffer()
     spa_transmitter = SPA.SPA(transmitter)
