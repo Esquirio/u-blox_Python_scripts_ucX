@@ -50,7 +50,7 @@ def generate_random_data(length):
 
     return data_generated
 
-def send_data(port, data, i):
+def send_data(port, data, data_config, i):
     """
     Sends the specified data via the specified serial port.
 
@@ -59,9 +59,13 @@ def send_data(port, data, i):
     """
     try:
         if debug:
-            print(f"{Fore.CYAN}{i}. Sending data ...")
-        # Send data
-        port.write(data.encode())
+            print(f"\n{Fore.CYAN}{i}. Sending data ...")
+        # Send data one byte at a time with a 3ms interval
+        for byte in data:
+            port.write(byte.encode())
+            if debug:
+                print(f"{Fore.GREEN}{byte}", end='')
+            time.sleep(data_config['interval_ms']/1000)
     except serial.SerialException as e:
         print(f"{Fore.RED}Serial error: {e}")
     except Exception as e:
@@ -152,8 +156,8 @@ def main():
     data = generate_random_data(data_config['data_size'])
 
     for i in range(data_config['xtimes']):
-        send_data(transmitter, data, i + 1)
-        time.sleep(data_config['interval_ms'] / 1000.0)  # Convert milliseconds to seconds
+        send_data(transmitter, data, data_config, i + 1)
+        time.sleep(data_config['packet_interval_ms'] / 1000.0)  # Convert milliseconds to seconds
     stop = myTimeStamp()
 
 if __name__=='__main__':
