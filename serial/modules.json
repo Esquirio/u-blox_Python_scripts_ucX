@@ -1,18 +1,18 @@
 {
     "transmitter": {
-        "COMPORT": "COM179",
-        "baudrate": 19200,
-        "mac_address": "6C:1D:EB:39:CF:E6"
+        "COMPORT": "COM201",
+        "baudrate": 921600,
+        "mac_address": "6C:1D:EB:3F:E1:E6"
     },
     "receiver": {
-        "COMPORT": "COM201",
-        "baudrate": 19200,
-        "mac_address": "D4:CA:6E:B8:6E:61"
+        "COMPORT": "COM194",
+        "baudrate": 921600,
+        "mac_address": "20:BA:36:34:C2:56"
     },
     "data": {
         "data_size": 128,
         "xtimes": 2,
-        "interval_ms": 3,
+        "interval_ms": 5,
         "packet_interval_ms": 1000
     },
     "debug": {
