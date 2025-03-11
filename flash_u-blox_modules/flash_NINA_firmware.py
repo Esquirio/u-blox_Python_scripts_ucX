@@ -12,9 +12,7 @@ from ubxsa import UBXSerialAdapter
 init(autoreset=True)
 
 # Global Variables
-u_blox_module_names = ["NINA-B22X", "NINA-W13X", "NINA-W15X", "NORA-W36X"]
-nina_family = [name for name in u_blox_module_names if name.startswith("NINA")]
-nora_family = [name for name in u_blox_module_names if name.startswith("NORA")]
+nina_family = ["NINA-B22X", "NINA-W13X", "NINA-W15X"]
 flash_baud_rate = 921600
 time_sleep = 0.5
 
@@ -101,9 +99,6 @@ def load_JSON(config: dict) -> dict:
         read_signature(parameters)
 
         return parameters
-    elif module in nora_family:
-        print(f"{Fore.RED}TODO: {module}")  
-        return None
     else:
         print(f"{Fore.RED}Error: Unsupported module {module}")
         return None
@@ -203,7 +198,7 @@ def main(config_file: str):
     parameters = load_JSON(config)
 
 
-    if parameters["module"] in u_blox_module_names:
+    if parameters["module"] in nina_family:
         if parameters["module"] in nina_family:
             # Open the serial port
             try:
@@ -246,11 +241,6 @@ def main(config_file: str):
 
             except serial.SerialException as e:
                 print(f"{Fore.RED}Error: {e}")
-
-
-        elif parameters["module"] in nora_family:
-            print(f"{Fore.RED}TODO: {parameters['module']}")
-            return None
     else:
         print(f"{Fore.RED}Error: Unsupported module {parameters['module']}")
         return None
