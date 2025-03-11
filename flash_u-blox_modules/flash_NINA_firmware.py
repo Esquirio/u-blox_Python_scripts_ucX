@@ -107,8 +107,6 @@ def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Seri
     if not parameters["port"]:
         print(f"{Fore.RED}Error: COMPORT is required in the configuration file.")
         return
-    print("parameters")
-    print(parameters)
 
     # Construct AT command with flags
     at_command = (f"AT+UFWUPD={parameters['mode']},{parameters['baudrate']},"
