@@ -7,14 +7,13 @@ from tqdm import tqdm
 from xmodem import XMODEM
 from colorama import Fore, Back, Style, init
 from ubxsa import UBXSerialAdapter
+import re
 
 # Initialize colorama
 init(autoreset=True)
 
 # Global Variables
 nina_family = ["NINA-B22X", "NINA-W13X", "NINA-W15X"]
-flash_baud_rate = 921600
-time_sleep = 0.5
 
 def read_config(config_file: str) -> dict:
     config = {}
@@ -103,7 +102,7 @@ def load_JSON(config: dict) -> dict:
         print(f"{Fore.RED}Error: Unsupported module {module}")
         return None
 
-def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Serial):
+def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Serial, previous_fw_version):
     if not parameters["port"]:
         print(f"{Fore.RED}Error: COMPORT is required in the configuration file.")
         return
@@ -186,6 +185,22 @@ def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Seri
     print(f"{Fore.CYAN}\nTotal time taken for transfer: {elapsed_time:.2f} seconds")
     print(f"{Fore.CYAN}Transfer speed: {file_size / elapsed_time / 1024:.2f} KB/s\n")
 
+    # Function to extract the version information
+    def extract_version_info(s):
+        match = re.match(r'"(\d+\.\d+\.\d+)-', s)
+        if match:
+            return match.group(1)
+        return None
+    
+    # Set baud rate back to default if firmware version is different
+    if extract_version_info(previous_fw_version) != parameters["fw"]:
+        ser.baudrate = 115200
+        print(f"{Fore.GREEN}*** Baud rate set back to default: 115200 bps ***")
+        # Update the ubx_port baudrate
+        ubx_port._stream.baudrate = 115200
+
+    return ubx_port
+
 def main(config_file: str):
     # Read configuration
     config = read_config(config_file)
@@ -217,11 +232,11 @@ def main(config_file: str):
                     ubx_port.send_command("ATI9")
                     full_resp = ubx_port.wait_for_response("OK")
 
-                    resp = full_resp[full_resp.find('"'):full_resp.rfind('"') + 1]
-                    print(f"{Fore.GREEN}*** Before flashing: ***\nFW Version: {resp}")	
+                    previous_fw_version = full_resp[full_resp.find('"'):full_resp.rfind('"') + 1]
+                    print(f"{Fore.GREEN}*** Before flashing: ***\nFW Version: {previous_fw_version}")	
 
                     # Flash the firmware
-                    flash_nina_fw(parameters, ubx_port, ser)
+                    ubx_port = flash_nina_fw(parameters, ubx_port, ser, previous_fw_version)
                     
                     # Wait for the +STARTUP message
                     resp = ubx_port.wait_for_startup()              
@@ -230,8 +245,13 @@ def main(config_file: str):
                     # Check the firmware version after flashing
                     ubx_port.send_command("ATI9")
                     full_resp = ubx_port.wait_for_response("OK")
-                    resp = full_resp[full_resp.find('"'):full_resp.rfind('"') + 1]
-                    print(f"{Fore.GREEN}*** After flashing: ***\nFW Version: {resp}")
+                    new_fw_version = full_resp[full_resp.find('"'):full_resp.rfind('"') + 1]
+                    print(f"{Fore.GREEN}*** After flashing: ***\nFW Version: {new_fw_version}")
+
+                    # Set baud rate back to default if firmware version is different
+                    if new_fw_version != previous_fw_version:
+                        ser.baudrate = 115200
+                        print(f"{Fore.GREEN}*** Baud rate set back to default: 115200 bps ***")
 
                     # Close the serial port
                     ser.close()
