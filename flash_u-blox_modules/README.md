@@ -8,9 +8,10 @@ Update the config.txt file with the required information. This file should be in
 
 See the following example:
 ```
-COMPORT=COM58
-BAUDRATE=115200
-PATH="C:\Firmwares\NINA-W15X-5.0.0\NINA-W15X-CF-1.0.json"
+MODULE="NINA-W15X"
+FW_VERSION="6.0.1"
+COMPORT=COM179
+BAUDRATE=921600
 ```
 
 Note: Add the complete path, including the JSON file name. This script was tested using a short path (50 characters or less) and no spaces or special characters.

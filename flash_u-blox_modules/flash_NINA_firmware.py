@@ -112,14 +112,16 @@ def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Seri
     if not parameters["port"]:
         print(f"{Fore.RED}Error: COMPORT is required in the configuration file.")
         return
-    
+    print("parameters")
+    print(parameters)
+
     # Construct AT command with flags
-    at_command = (f'AT+UFWUPD={parameters["mode"]},{parameters["baudrate"]},'
-                  f'{parameters["id"]},{parameters["size"]},'
-                  f'{parameters["signature"]},{parameters["name"]},{parameters["flags"]}')
+    at_command = (f"AT+UFWUPD={parameters['mode']},{parameters['baudrate']},"
+                  f"{parameters['id']},{parameters['size']},"
+                  f"{parameters['signature']},{parameters['name']},{parameters['flags']}")
 
     # Send the AT command
-    print(f"{Fore.GREEN}*** Sending the AT Command to flash {parameters["module"]}X-{parameters["fw"]} ***")
+    print(f"{Fore.GREEN}*** Sending the AT Command to flash {parameters['module']}X-{parameters['fw']} ***")
     print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
     ubx_port.send_command(at_command)
     # ser.write(at_command.encode() + b"\r\n")
@@ -153,11 +155,11 @@ def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Seri
     file_size = os.path.getsize(file_path)
 
     # Initialize the progress bar
-    progress_bar = tqdm(total=file_size, unit='B', unit_scale=True, desc="Transferring File", ncols=80)
+    progress_bar = tqdm(total=file_size, unit='B', unit_scale=True, desc="Transferring File", ncols=100)
 
     def progress_callback(total_packets, success_count, error_count):
         """ Progress callback to update the progress bar """
-        packet_size = 128  # or 1024 for XMODEM-1K
+        packet_size = 128 # or 1024 for XMODEM-1K
         bytes_transferred = success_count * packet_size
         progress_bar.update(bytes_transferred - progress_bar.n)
 
@@ -206,7 +208,7 @@ def main(config_file: str):
             # Open the serial port
             try:
                 with serial.Serial(parameters["port"], parameters["baudrate"], timeout=2) as ser:
-                    print(f"{Fore.GREEN}*** Openning UART - COMPORT: {parameters["port"]}, baudrate: {parameters["baudrate"]} ***\n")
+                    print(f"{Fore.GREEN}*** Openning UART - COMPORT: {parameters['port']}, baudrate: {parameters['baudrate']} ***\n")
                     
                     # Reset input and output buffers
                     ser.reset_input_buffer()
@@ -227,10 +229,7 @@ def main(config_file: str):
 
                     # Flash the firmware
                     flash_nina_fw(parameters, ubx_port, ser)
-
-                    ubx_port.send_command("AT+CPWROFF")
-                    ubx_port.wait_for_response("OK")
-
+                    
                     # Wait for the +STARTUP message
                     resp = ubx_port.wait_for_startup()              
                     print(f"{Fore.YELLOW}{Style.DIM}{resp} received")
@@ -250,10 +249,10 @@ def main(config_file: str):
 
 
         elif parameters["module"] in nora_family:
-            print(f"{Fore.RED}TODO: {parameters["module"]}")
+            print(f"{Fore.RED}TODO: {parameters['module']}")
             return None
     else:
-        print(f"{Fore.RED}Error: Unsupported module {parameters["module"]}")
+        print(f"{Fore.RED}Error: Unsupported module {parameters['module']}")
         return None
 
 if __name__ == "__main__":

@@ -31,10 +31,10 @@ class UBXSerialAdapter:
 
 	def wait_for_startup(self):
 		r = self.read()
-		#Read response until STARTUP received
-		while (str.find(r.decode(),"+STARTUP") < 0):
+		# Read response until STARTUP received
+		while "+STARTUP" not in r.decode(errors='ignore'):
 			r = r + self.read()
-		return r.decode()[r.decode().find("+STARTUP"):]
+		return r.decode(errors='ignore')[r.decode(errors='ignore').find("+STARTUP"):]
 
 	def wait_for_response(self, response):
 		r = self.readline()
