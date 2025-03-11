@@ -192,10 +192,10 @@ def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Seri
             return match.group(1)
         return None
     
-    # Set baud rate back to default if firmware version is different
+    # Set baudrate back to default if firmware version is different
     if extract_version_info(previous_fw_version) != parameters["fw"]:
         ser.baudrate = 115200
-        print(f"{Fore.GREEN}*** Baud rate set back to default: 115200 bps ***")
+        print(f"{Fore.GREEN}*** Baudrate set back to default: 115200 bps ***")
         # Update the ubx_port baudrate
         ubx_port._stream.baudrate = 115200
 
