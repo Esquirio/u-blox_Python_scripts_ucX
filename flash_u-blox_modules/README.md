@@ -50,7 +50,7 @@ flash_u-blox_modules/
 
 On the console, run the following command to execute the script:
 ```
-python flash_NINA_firmware.py -c config.txt
+python flash_NINA_firmware.py -f config.txt
 ```
 
 ### Video
