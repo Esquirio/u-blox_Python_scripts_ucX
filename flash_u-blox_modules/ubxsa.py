@@ -58,5 +58,9 @@ class UBXSerialAdapter:
 		self.send_command("AT+CPWROFF")
 		self.waitForStartup()
 
+	def reboot_device(self):
+		self.send_command("AT&W")
+		self.send_command("AT+CPWROFF")
+
 	def enter_data_mode(self):
 		self.send_command("ATO1")

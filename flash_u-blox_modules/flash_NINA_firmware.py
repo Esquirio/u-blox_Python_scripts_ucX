@@ -12,6 +12,8 @@ import re
 # Initialize colorama
 init(autoreset=True)
 
+default_baudrate = 115200
+
 # Global Variables
 nina_family = ["NINA-B22X", "NINA-W13X", "NINA-W15X"]
 
@@ -73,6 +75,7 @@ def load_JSON(config: dict) -> dict:
             "fw": config.get("FW_VERSION"),  # Get the firmware version from the config file
             "port": config.get("COMPORT"),  # Get the COM port from the config file
             "baudrate": int(config.get("BAUDRATE")),  #Get the baudrate from the config file
+            "flash_baudrate": int(config.get("FLASH_BAUDRATE")),  #Baudrate to flash the firmware
             "id": int(data["Id"], 16),  # Convert from hex to decimal
             "size": int(data["Size"], 16),    # Convert from hex to decimal
             "file": data["File"],  # Get "File" from JSON data
@@ -108,7 +111,7 @@ def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Seri
         return
 
     # Construct AT command with flags
-    at_command = (f"AT+UFWUPD={parameters['mode']},{parameters['baudrate']},"
+    at_command = (f"AT+UFWUPD={parameters['mode']},{parameters['flash_baudrate']},"
                   f"{parameters['id']},{parameters['size']},"
                   f"{parameters['signature']},{parameters['name']},{parameters['flags']}")
 
@@ -116,10 +119,6 @@ def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Seri
     print(f"{Fore.GREEN}*** Sending the AT Command to flash {parameters['module']}X-{parameters['fw']} ***")
     print(f"{Fore.YELLOW}{Style.DIM}{at_command}\n")
     ubx_port.send_command(at_command)
-    # ser.write(at_command.encode() + b"\r\n")
-
-    # Record the start time
-    start_time = time.time()
 
     # Now, wait for the sequence of 3 'C' characters
     print(f"{Fore.GREEN}*** Ready to send fw via XMODEM... ***")
@@ -135,6 +134,9 @@ def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Seri
         elif byte:
             c_count = 0  # Reset if something else is received
 
+    # Record the start time
+    start_time = time.time()
+    
     print(f"{Fore.GREEN}\n\n*** Starting XMODEM file transfer... ***")
 
     # Prepare XMODEM file transfer
@@ -194,10 +196,10 @@ def flash_nina_fw(parameters: dict, ubx_port: UBXSerialAdapter, ser: serial.Seri
     
     # Set baudrate back to default if firmware version is different
     if extract_version_info(previous_fw_version) != parameters["fw"]:
-        ser.baudrate = 115200
+        ser.baudrate = default_baudrate
         print(f"{Fore.GREEN}*** Baudrate set back to default: 115200 bps ***")
         # Update the ubx_port baudrate
-        ubx_port._stream.baudrate = 115200
+        ubx_port._stream.baudrate = default_baudrate
 
     return ubx_port
 
@@ -233,8 +235,38 @@ def main(config_file: str):
                     full_resp = ubx_port.wait_for_response("OK")
 
                     previous_fw_version = full_resp[full_resp.find('"'):full_resp.rfind('"') + 1]
-                    print(f"{Fore.GREEN}*** Before flashing: ***\nFW Version: {previous_fw_version}")	
+                    print(f"{Fore.GREEN}*** Before flashing: ***\nFW Version: {previous_fw_version}")
 
+                    # Set baudrate back to default if firmware version is different
+                    if parameters['baudrate'] != parameters['flash_baudrate']:
+                        ubx_port.send_command(f"AT+UMRS={parameters['flash_baudrate']},1,8,1,1,0")
+                        ubx_port.wait_for_response("OK")
+                        print("AT+UMRS OK received")
+                        ubx_port.reboot_device()
+                        time.sleep(1)
+
+                        ser.close()
+                        ser.__del__()
+                        time.sleep(1)
+
+                        ser = serial.Serial(parameters["port"], parameters["flash_baudrate"], timeout=2)
+                        # Reset input and output buffers
+                        ser.reset_input_buffer()
+                        ser.reset_output_buffer()
+
+                        ser.readline()
+                        ser.readline()
+
+                        # ser.baudrate = parameters['flash_baudrate']
+                        print(f"{Fore.GREEN}*** Baudrate set to: {parameters['flash_baudrate']} bps ***")
+                        # Update the ubx_port baudrate
+                        ubx_port = UBXSerialAdapter(ser)
+                        # ubx_port._stream.baudrate = parameters['flash_baudrate']
+                        print("Baudrate updated")
+                        ubx_port.send_command("AT")
+                        ubx_port.wait_for_response("OK")
+                        print("OK received")
+                        
                     # Flash the firmware
                     ubx_port = flash_nina_fw(parameters, ubx_port, ser, previous_fw_version)
                     
@@ -247,11 +279,6 @@ def main(config_file: str):
                     full_resp = ubx_port.wait_for_response("OK")
                     new_fw_version = full_resp[full_resp.find('"'):full_resp.rfind('"') + 1]
                     print(f"{Fore.GREEN}*** After flashing: ***\nFW Version: {new_fw_version}")
-
-                    # Set baud rate back to default if firmware version is different
-                    if new_fw_version != previous_fw_version:
-                        ser.baudrate = 115200
-                        print(f"{Fore.GREEN}*** Baud rate set back to default: 115200 bps ***")
 
                     # Close the serial port
                     ser.close()
